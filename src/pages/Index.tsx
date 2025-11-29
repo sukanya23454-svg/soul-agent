@@ -11,35 +11,37 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="container mx-auto px-4 py-20 lg:py-32 relative">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
-                AI Agent{" "}
-                <span className="text-gradient">Playground</span>
-              </h1>
-              <h2 className="text-xl lg:text-2xl text-muted-foreground leading-relaxed">
-                Build your own AI agents with custom personalities.
-                <br />
-                Chat with them in realtime.
-                <br />
-                No code, no chaos — just pure brain power.
-              </h2>
+      <section className="relative overflow-hidden min-h-screen flex items-center justify-center">
+        {/* Background Image with Low Opacity */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={heroImage}
+            alt=""
+            className="w-full h-full object-cover opacity-10"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background" />
+        </div>
+        
+        {/* Centered Content */}
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+              AI Agent{" "}
+              <span className="text-gradient">Playground</span>
+            </h1>
+            <h2 className="text-xl lg:text-2xl text-foreground/90 leading-relaxed">
+              Build your own AI agents with custom personalities.
+              <br />
+              Chat with them in realtime.
+              <br />
+              No code, no chaos — just pure brain power.
+            </h2>
+            <div className="pt-4">
               <Link to="/agents">
                 <Button size="lg" className="text-lg px-8 py-6 glow-cyan hover:scale-105 transition-all">
                   Start Building <ArrowRight className="ml-2" />
                 </Button>
               </Link>
-            </div>
-            <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 delay-300">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur-3xl" />
-              <img
-                src={heroImage}
-                alt="AI Brain Network"
-                className="relative rounded-2xl shadow-2xl"
-              />
             </div>
           </div>
         </div>
