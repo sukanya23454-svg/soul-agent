@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import AbilitiesSelector from "@/components/AbilitiesSelector";
+import AgentActionDialog from "@/components/AgentActionDialog";
 
 const CreateAgent = () => {
   const [name, setName] = useState("");
@@ -16,6 +17,8 @@ const CreateAgent = () => {
   const [instructions, setInstructions] = useState("");
   const [selectedAbilities, setSelectedAbilities] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showActionDialog, setShowActionDialog] = useState(false);
+  const [createdAgentId, setCreatedAgentId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -68,9 +71,62 @@ const CreateAgent = () => {
         if (abilitiesError) throw abilitiesError;
       }
 
+      setCreatedAgentId(agent.id);
+      setShowActionDialog(true);
+    } catch (error: any) {
       toast({
-        title: "Success!",
-        description: "Your AI agent has been created with selected abilities.",
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeepAgent = async (makePublic: boolean) => {
+    if (!createdAgentId) return;
+
+    try {
+      if (makePublic) {
+        await supabase
+          .from("agents")
+          .update({
+            is_public: true,
+            published_at: new Date().toISOString(),
+          })
+          .eq("id", createdAgentId);
+
+        toast({
+          title: "Success!",
+          description: "Your agent has been published to the marketplace.",
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: "Your AI agent has been created.",
+        });
+      }
+
+      navigate("/agents");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAgent = async () => {
+    if (!createdAgentId) return;
+
+    try {
+      await supabase.from("agents").delete().eq("id", createdAgentId);
+
+      toast({
+        title: "Agent deleted",
+        description: "The agent has been removed.",
       });
 
       navigate("/agents");
@@ -80,8 +136,6 @@ const CreateAgent = () => {
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -166,6 +220,13 @@ const CreateAgent = () => {
             </form>
           </div>
         </Card>
+
+        <AgentActionDialog
+          open={showActionDialog}
+          onKeep={handleKeepAgent}
+          onDelete={handleDeleteAgent}
+          agentName={name}
+        />
       </div>
     </div>
   );

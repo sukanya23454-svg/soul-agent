@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Bot, LogOut, MessageSquare, Sparkles, Home, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Bot, LogOut, MessageSquare, Sparkles, Home, Upload, Store } from "lucide-react";
 import type { Agent } from "@/integrations/supabase/database.types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -85,6 +85,12 @@ const AgentList = () => {
                 <Button variant="ghost" size="sm">
                   <Upload className="mr-2 h-4 w-4" />
                   Files
+                </Button>
+              </Link>
+              <Link to="/marketplace">
+                <Button variant="ghost" size="sm">
+                  <Store className="mr-2 h-4 w-4" />
+                  Marketplace
                 </Button>
               </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>

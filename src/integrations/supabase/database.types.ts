@@ -7,6 +7,22 @@ export interface Agent {
   instructions: string;
   created_at: string;
   updated_at: string;
+  is_public: boolean;
+  published_at: string | null;
+  clone_count: number;
+  rating_average: number;
+  rating_count: number;
+  original_agent_id: string | null;
+}
+
+export interface AgentRating {
+  id: string;
+  agent_id: string;
+  user_id: string;
+  rating: number;
+  review: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Message {
