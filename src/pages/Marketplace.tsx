@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Bot, Star, Copy, Search, TrendingUp, Clock, Users, Heart, MessageSquare, Trophy, Activity } from "lucide-react";
+import { ArrowLeft, Bot, Star, Copy, Search, TrendingUp, Clock, Users, Heart, MessageSquare, Trophy, Activity, Settings } from "lucide-react";
 import type { Agent } from "@/integrations/supabase/database.types";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -247,12 +247,17 @@ const Marketplace = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12">
         <div className="mb-12">
-          <Link to="/agents">
-            <Button variant="ghost" size="sm" className="mb-6">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to My Agents
+          <div className="flex items-center justify-between mb-6">
+            <Link to="/agents">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to My Agents
+              </Button>
+            </Link>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
+              <Settings className="w-5 h-5" />
             </Button>
-          </Link>
+          </div>
 
           <div className="text-center space-y-4 mb-8">
             <h1 className="text-5xl font-bold text-gradient">Agent Marketplace</h1>
