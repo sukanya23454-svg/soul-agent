@@ -57,18 +57,18 @@ const ChatWithAgent = () => {
         return;
       }
 
-      // Get agent
+      // Get agent - allow access to own agents OR public agents
       const { data: agentData, error: agentError } = await supabase
         .from("agents")
         .select("*")
         .eq("id", agentId)
-        .eq("user_id", session.user.id)
+        .or(`user_id.eq.${session.user.id},is_public.eq.true`)
         .single();
 
       if (agentError || !agentData) {
         toast({
           title: "Error",
-          description: "Agent not found",
+          description: "Agent not found or you don't have access",
           variant: "destructive",
         });
         navigate("/agents");
