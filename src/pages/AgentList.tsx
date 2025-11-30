@@ -3,12 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Plus, Bot, LogOut, MessageSquare } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Plus, Bot, LogOut, MessageSquare, Sparkles } from "lucide-react";
 import type { Agent } from "@/integrations/supabase/database.types";
 import { useToast } from "@/hooks/use-toast";
 
+interface AgentWithAbilities extends Agent {
+  abilityCount?: number;
+}
+
 const AgentList = () => {
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<AgentWithAbilities[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -21,7 +26,7 @@ const AgentList = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data: agentsData, error } = await supabase
         .from("agents")
         .select("*")
         .eq("user_id", session.user.id)
@@ -35,7 +40,22 @@ const AgentList = () => {
           variant: "destructive",
         });
       } else {
-        setAgents(data || []);
+        // Fetch ability counts for each agent
+        const agentsWithCounts = await Promise.all(
+          (agentsData || []).map(async (agent) => {
+            const { count } = await supabase
+              .from("agent_abilities")
+              .select("*", { count: 'exact', head: true })
+              .eq("agent_id", agent.id);
+            
+            return {
+              ...agent,
+              abilityCount: count || 0
+            };
+          })
+        );
+        
+        setAgents(agentsWithCounts);
       }
 
       setLoading(false);
@@ -102,22 +122,35 @@ const AgentList = () => {
             {agents.map((agent) => (
               <Card
                 key={agent.id}
-                className="p-8 bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 hover:scale-105 cursor-pointer group"
+                className="p-8 bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 hover:scale-105 cursor-pointer group relative overflow-hidden"
                 onClick={() => navigate(`/chat/${agent.id}`)}
               >
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <Bot className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <h3 className="text-xl font-bold">{agent.name}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {agent.description || agent.personality}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-primary">
-                      <MessageSquare className="w-4 h-4" />
-                      <span>Start chatting</span>
+                {/* Subtle glow effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="relative flex flex-col gap-4 h-full">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                      <Bot className="w-6 h-6 text-primary" />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold mb-1 truncate">{agent.name}</h3>
+                      {agent.abilityCount !== undefined && agent.abilityCount > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          {agent.abilityCount} {agent.abilityCount === 1 ? 'ability' : 'abilities'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground line-clamp-3 flex-1">
+                    {agent.description || agent.personality}
+                  </p>
+                  
+                  <div className="flex items-center gap-2 text-xs text-primary pt-2 border-t border-border/50">
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="font-medium">Start chatting</span>
                   </div>
                 </div>
               </Card>

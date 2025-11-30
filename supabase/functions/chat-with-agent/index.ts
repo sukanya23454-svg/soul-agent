@@ -39,7 +39,7 @@ serve(async (req) => {
 
     console.log('Processing chat for user:', user.id, 'agent:', agentId);
 
-    // Get agent
+    // Get agent with abilities
     const { data: agent, error: agentError } = await supabase
       .from('agents')
       .select('*')
@@ -51,18 +51,40 @@ serve(async (req) => {
       throw new Error('Agent not found');
     }
 
-    // Get message history for this agent
+    // Get agent's abilities
+    const { data: agentAbilities, error: abilitiesError } = await supabase
+      .from('agent_abilities')
+      .select('ability_id, abilities(*)')
+      .eq('agent_id', agentId);
+
+    const abilities = agentAbilities?.map((aa: any) => aa.abilities) || [];
+    console.log('Agent has', abilities.length, 'abilities');
+
+    // Get recent memories (top 5 most important)
+    const { data: memories, error: memoriesError } = await supabase
+      .from('agent_memories')
+      .select('*')
+      .eq('agent_id', agentId)
+      .order('importance', { ascending: false })
+      .limit(5);
+
+    console.log('Retrieved', memories?.length || 0, 'memories');
+
+    // Get message history for this agent (last 20 messages for context)
     const { data: messages, error: msgError } = await supabase
       .from('messages')
       .select('*')
       .eq('agent_id', agentId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(20);
 
     if (msgError) {
       throw new Error('Failed to fetch messages');
     }
 
-    console.log('Fetched', messages?.length || 0, 'previous messages');
+    // Reverse to get chronological order
+    const chronMessages = messages?.reverse() || [];
+    console.log('Fetched', chronMessages.length, 'previous messages');
 
     // Save user message
     const { error: insertError } = await supabase
@@ -77,14 +99,32 @@ serve(async (req) => {
       throw new Error('Failed to save user message');
     }
 
+    // Build enhanced system prompt with abilities and memories
+    let systemPrompt = `You are ${agent.name}. ${agent.description}\n\nPersonality: ${agent.personality}\n\nInstructions: ${agent.instructions}`;
+
+    // Add abilities to system prompt
+    if (abilities.length > 0) {
+      systemPrompt += '\n\nYour Abilities:\n';
+      abilities.forEach((ability: any) => {
+        systemPrompt += `- ${ability.name}: ${ability.prompt_template}\n`;
+      });
+    }
+
+    // Add memories to system prompt
+    if (memories && memories.length > 0) {
+      systemPrompt += '\n\nImportant Memories:\n';
+      memories.forEach((memory: any) => {
+        systemPrompt += `- [${memory.memory_type}] ${memory.content}\n`;
+      });
+    }
+
     // Build messages for Groq
-    // Map 'agent' role to 'assistant' for Groq API compatibility
     const groqMessages = [
       {
         role: 'system',
-        content: `You are ${agent.name}. ${agent.description}\n\nPersonality: ${agent.personality}\n\nInstructions: ${agent.instructions}`
+        content: systemPrompt
       },
-      ...(messages || []).map(m => ({
+      ...chronMessages.map(m => ({
         role: m.role === 'agent' ? 'assistant' : m.role,
         content: m.content
       })),
@@ -138,6 +178,23 @@ serve(async (req) => {
     if (assistantInsertError) {
       console.error('Failed to save assistant message:', assistantInsertError);
       throw new Error('Failed to save assistant message');
+    }
+
+    // Auto-create memory for important conversations (every 5th message)
+    const totalMessages = chronMessages.length + 2; // +2 for current user and agent messages
+    if (totalMessages % 5 === 0) {
+      const memoryContent = `User asked: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}" - Context from conversation`;
+      
+      await supabase
+        .from('agent_memories')
+        .insert({
+          agent_id: agentId,
+          memory_type: 'context',
+          content: memoryContent,
+          importance: 5
+        });
+      
+      console.log('Created new memory');
     }
 
     return new Response(
