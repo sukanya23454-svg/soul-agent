@@ -10,6 +10,7 @@ import AgentList from "./pages/AgentList";
 import CreateAgent from "./pages/CreateAgent";
 import ChatWithAgent from "./pages/ChatWithAgent";
 import Files from "./pages/Files";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/create-agent" element={<CreateAgent />} />
           <Route path="/chat/:agentId" element={<ChatWithAgent />} />
           <Route path="/files" element={<Files />} />
+          <Route path="/marketplace" element={<Marketplace />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
