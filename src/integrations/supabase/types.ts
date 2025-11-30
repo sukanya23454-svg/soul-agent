@@ -261,6 +261,7 @@ export type Database = {
       }
       agents: {
         Row: {
+          avatar_url: string | null
           clone_count: number | null
           created_at: string | null
           description: string | null
@@ -278,6 +279,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
           clone_count?: number | null
           created_at?: string | null
           description?: string | null
@@ -295,6 +297,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
           clone_count?: number | null
           created_at?: string | null
           description?: string | null
@@ -352,6 +355,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_activity: {
+        Row: {
+          created_at: string
+          current_streak: number | null
+          id: string
+          last_active_date: string | null
+          longest_streak: number | null
+          total_automations_triggered: number | null
+          total_messages: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_active_date?: string | null
+          longest_streak?: number | null
+          total_automations_triggered?: number | null
+          total_messages?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_active_date?: string | null
+          longest_streak?: number | null
+          total_automations_triggered?: number | null
+          total_messages?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

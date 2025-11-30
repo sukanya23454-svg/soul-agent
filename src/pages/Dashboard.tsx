@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Brain, Plus, MessageSquare, Zap, FileText, Calendar,
+  Brain, Plus, MessageSquare, Zap, FileText,
   TrendingUp, Upload, Settings, LogOut, Users
 } from "lucide-react";
 import type { Agent, AgentMemory, AgentAutomation, Message } from "@/integrations/supabase/database.types";
+import NotificationsPanel from "@/components/NotificationsPanel";
+import StatsStreaksPanel from "@/components/StatsStreaksPanel";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -117,6 +119,7 @@ const Dashboard = () => {
               <span className="text-2xl font-bold text-gradient">AI Dashboard</span>
             </div>
             <div className="flex items-center gap-2">
+              <NotificationsPanel />
               <Button variant="ghost" size="icon" onClick={() => navigate("/agents")}>
                 <Users className="w-5 h-5" />
               </Button>
@@ -159,6 +162,9 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
+
+        {/* Stats & Streaks */}
+        <StatsStreaksPanel />
 
         {/* Stats Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
