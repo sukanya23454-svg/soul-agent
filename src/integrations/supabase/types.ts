@@ -221,41 +221,105 @@ export type Database = {
           },
         ]
       }
+      agent_ratings: {
+        Row: {
+          agent_id: string
+          created_at: string | null
+          id: string
+          rating: number
+          review: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string | null
+          id?: string
+          rating: number
+          review?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string | null
+          id?: string
+          rating?: number
+          review?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_ratings_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
+          clone_count: number | null
           created_at: string | null
           description: string | null
           goal: string | null
           id: string
           instructions: string | null
+          is_public: boolean | null
           name: string
+          original_agent_id: string | null
           personality: string | null
+          published_at: string | null
+          rating_average: number | null
+          rating_count: number | null
           style: string | null
           user_id: string
         }
         Insert: {
+          clone_count?: number | null
           created_at?: string | null
           description?: string | null
           goal?: string | null
           id?: string
           instructions?: string | null
+          is_public?: boolean | null
           name: string
+          original_agent_id?: string | null
           personality?: string | null
+          published_at?: string | null
+          rating_average?: number | null
+          rating_count?: number | null
           style?: string | null
           user_id: string
         }
         Update: {
+          clone_count?: number | null
           created_at?: string | null
           description?: string | null
           goal?: string | null
           id?: string
           instructions?: string | null
+          is_public?: boolean | null
           name?: string
+          original_agent_id?: string | null
           personality?: string | null
+          published_at?: string | null
+          rating_average?: number | null
+          rating_count?: number | null
           style?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agents_original_agent_id_fkey"
+            columns: ["original_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
