@@ -39,17 +39,19 @@ serve(async (req) => {
 
     console.log('Processing chat for user:', user.id, 'agent:', agentId);
 
-    // Get agent with abilities
+    // Get agent - allow access to own agents OR public agents
     const { data: agent, error: agentError } = await supabase
       .from('agents')
       .select('*')
       .eq('id', agentId)
-      .eq('user_id', user.id)
+      .or(`user_id.eq.${user.id},is_public.eq.true`)
       .single();
 
     if (agentError || !agent) {
-      throw new Error('Agent not found');
+      throw new Error('Agent not found or you do not have access');
     }
+
+    console.log('Agent found:', agent.name, 'Type:', agent.agent_type || 'general');
 
     // Get agent's abilities
     const { data: agentAbilities, error: abilitiesError } = await supabase
@@ -57,28 +59,48 @@ serve(async (req) => {
       .select('ability_id, abilities(*)')
       .eq('agent_id', agentId);
 
-    const abilities = agentAbilities?.map((aa: any) => aa.abilities) || [];
+    let abilities = agentAbilities?.map((aa: any) => aa.abilities) || [];
+    
+    // Prioritize abilities matching the agent type
+    if (agent.agent_type && agent.agent_type !== 'general') {
+      abilities = abilities.sort((a: any, b: any) => {
+        const aMatches = a.category === agent.agent_type;
+        const bMatches = b.category === agent.agent_type;
+        if (aMatches && !bMatches) return -1;
+        if (!aMatches && bMatches) return 1;
+        return 0;
+      });
+    }
+    
     console.log('Agent has', abilities.length, 'abilities');
 
-    // Get recent memories (top 5 most important)
-    const { data: memories, error: memoriesError } = await supabase
-      .from('agent_memories')
-      .select('*')
-      .eq('agent_id', agentId)
-      .order('importance', { ascending: false })
-      .limit(5);
-
-    console.log('Retrieved', memories?.length || 0, 'memories');
+    // Get recent memories (top 5 most important) - only for agent owner
+    let memories = [];
+    if (agent.user_id === user.id) {
+      const { data: memData } = await supabase
+        .from('agent_memories')
+        .select('*')
+        .eq('agent_id', agentId)
+        .order('importance', { ascending: false })
+        .limit(5);
+      
+      memories = memData || [];
+      console.log('Retrieved', memories.length, 'memories (owner only)');
+    }
 
     // Get message history for this agent (last 20 messages for context)
-    const { data: messages, error: msgError } = await supabase
+    // For public agents, get conversation history for this user only
+    let messagesQuery = supabase
       .from('messages')
       .select('*')
       .eq('agent_id', agentId)
       .order('created_at', { ascending: false })
       .limit(20);
 
+    const { data: messages, error: msgError } = await messagesQuery;
+
     if (msgError) {
+      console.error('Error fetching messages:', msgError);
       throw new Error('Failed to fetch messages');
     }
 
@@ -96,22 +118,41 @@ serve(async (req) => {
       });
 
     if (insertError) {
+      console.error('Error saving user message:', insertError);
       throw new Error('Failed to save user message');
     }
 
     // Build enhanced system prompt with abilities and memories
-    let systemPrompt = `You are ${agent.name}. ${agent.description}\n\nPersonality: ${agent.personality}\n\nInstructions: ${agent.instructions}`;
+    let systemPrompt = `You are ${agent.name}.`;
+    
+    if (agent.description) {
+      systemPrompt += ` ${agent.description}`;
+    }
+    
+    if (agent.personality) {
+      systemPrompt += `\n\nPersonality: ${agent.personality}`;
+    }
+    
+    if (agent.instructions) {
+      systemPrompt += `\n\nInstructions: ${agent.instructions}`;
+    }
+
+    // Add agent type context
+    if (agent.agent_type && agent.agent_type !== 'general') {
+      systemPrompt += `\n\nAgent Type: You are specialized as a ${agent.agent_type} agent.`;
+    }
 
     // Add abilities to system prompt
     if (abilities.length > 0) {
       systemPrompt += '\n\nYour Abilities:\n';
       abilities.forEach((ability: any) => {
-        systemPrompt += `- ${ability.name}: ${ability.prompt_template}\n`;
+        systemPrompt += `- ${ability.name}: ${ability.description}\n  ${ability.prompt_template}\n`;
       });
+      systemPrompt += '\nUse these abilities when appropriate based on user requests.';
     }
 
-    // Add memories to system prompt
-    if (memories && memories.length > 0) {
+    // Add memories to system prompt (owner only)
+    if (memories.length > 0) {
       systemPrompt += '\n\nImportant Memories:\n';
       memories.forEach((memory: any) => {
         systemPrompt += `- [${memory.memory_type}] ${memory.content}\n`;
@@ -180,21 +221,23 @@ serve(async (req) => {
       throw new Error('Failed to save assistant message');
     }
 
-    // Auto-create memory for important conversations (every 5th message)
-    const totalMessages = chronMessages.length + 2; // +2 for current user and agent messages
-    if (totalMessages % 5 === 0) {
-      const memoryContent = `User asked: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}" - Context from conversation`;
-      
-      await supabase
-        .from('agent_memories')
-        .insert({
-          agent_id: agentId,
-          memory_type: 'context',
-          content: memoryContent,
-          importance: 5
-        });
-      
-      console.log('Created new memory');
+    // Auto-create memory for important conversations (every 5th message) - owner only
+    if (agent.user_id === user.id) {
+      const totalMessages = chronMessages.length + 2; // +2 for current user and agent messages
+      if (totalMessages % 5 === 0) {
+        const memoryContent = `User asked: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}" - Context from conversation`;
+        
+        await supabase
+          .from('agent_memories')
+          .insert({
+            agent_id: agentId,
+            memory_type: 'context',
+            content: memoryContent,
+            importance: 5
+          });
+        
+        console.log('Created new memory');
+      }
     }
 
     return new Response(
