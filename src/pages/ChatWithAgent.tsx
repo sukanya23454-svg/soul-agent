@@ -5,10 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, Zap } from "lucide-react";
+import { ArrowLeft, Send, Zap, Paperclip } from "lucide-react";
 import type { Agent, Message, AgentAutomation } from "@/integrations/supabase/database.types";
 import { AutomationCard } from "@/components/AutomationCard";
 import { CreateAutomationDialog } from "@/components/CreateAutomationDialog";
+import { FileUpload } from "@/components/FileUpload";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const ChatWithAgent = () => {
   const { agentId } = useParams();
@@ -18,6 +26,7 @@ const ChatWithAgent = () => {
   const [loading, setLoading] = useState(false);
   const [showAutomations, setShowAutomations] = useState(false);
   const [automations, setAutomations] = useState<AgentAutomation[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -304,6 +313,28 @@ const ChatWithAgent = () => {
       <div className="border-t border-border/50 bg-card/30 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
           <div className="flex gap-2">
+            <Dialog open={showFileUpload} onOpenChange={setShowFileUpload}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload File</DialogTitle>
+                </DialogHeader>
+                <FileUpload 
+                  agentId={agentId!} 
+                  onUploadComplete={() => {
+                    setShowFileUpload(false);
+                    toast({
+                      title: "Success",
+                      description: "File uploaded and being analyzed",
+                    });
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
             <Input
               placeholder="Type your message..."
               value={inputMessage}

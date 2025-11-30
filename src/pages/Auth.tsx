@@ -20,13 +20,13 @@ const Auth = () => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/agents");
+        navigate("/dashboard");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && event === "SIGNED_IN") {
-        navigate("/agents");
+        navigate("/dashboard");
       }
     });
 
@@ -55,7 +55,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/agents`,
+            emailRedirectTo: `${window.location.origin}/dashboard`,
           },
         });
 
