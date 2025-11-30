@@ -363,6 +363,7 @@ export type Database = {
       }
       agents: {
         Row: {
+          agent_type: string | null
           avatar_url: string | null
           clone_count: number | null
           created_at: string | null
@@ -382,6 +383,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agent_type?: string | null
           avatar_url?: string | null
           clone_count?: number | null
           created_at?: string | null
@@ -401,6 +403,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agent_type?: string | null
           avatar_url?: string | null
           clone_count?: number | null
           created_at?: string | null

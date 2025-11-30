@@ -5,6 +5,7 @@ export interface Agent {
   description: string;
   personality: string;
   instructions: string;
+  agent_type: string;
   created_at: string;
   updated_at: string;
   is_public: boolean;

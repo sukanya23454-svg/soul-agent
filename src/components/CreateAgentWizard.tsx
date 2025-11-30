@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ArrowRight, Upload, User, Sparkles, Globe, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, User, Sparkles, Globe, Lock, Briefcase } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AbilitiesSelector from "@/components/AbilitiesSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +27,7 @@ const CreateAgentWizard = ({ onComplete, onCancel }: CreateAgentWizardProps) => 
   const [description, setDescription] = useState("");
   const [personality, setPersonality] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [agentType, setAgentType] = useState("general");
 
   // Step 2: Skills
   const [selectedAbilities, setSelectedAbilities] = useState<string[]>([]);
@@ -104,6 +106,7 @@ const CreateAgentWizard = ({ onComplete, onCancel }: CreateAgentWizardProps) => 
           description,
           personality,
           instructions,
+          agent_type: agentType,
           avatar_url: avatarUrl,
           is_public: isPublic,
           published_at: isPublic ? new Date().toISOString() : null,
@@ -177,6 +180,26 @@ const CreateAgentWizard = ({ onComplete, onCancel }: CreateAgentWizardProps) => 
             </div>
 
             <div className="space-y-2">
+              <label className="text-sm font-medium">Agent Type *</label>
+              <Select value={agentType} onValueChange={setAgentType}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue placeholder="Select agent type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="study">Study</SelectItem>
+                  <SelectItem value="analytics">Analytics</SelectItem>
+                  <SelectItem value="fitness">Fitness</SelectItem>
+                  <SelectItem value="finance">Finance</SelectItem>
+                  <SelectItem value="content">Content Creator</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose the type to get specialized abilities
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-sm font-medium">Description</label>
               <Input
                 placeholder="Brief description of your agent"
@@ -221,6 +244,7 @@ const CreateAgentWizard = ({ onComplete, onCancel }: CreateAgentWizardProps) => 
             <AbilitiesSelector
               selectedAbilities={selectedAbilities}
               onAbilitiesChange={setSelectedAbilities}
+              agentType={agentType}
             />
           </div>
         )}
