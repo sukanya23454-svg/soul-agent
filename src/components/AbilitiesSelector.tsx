@@ -8,9 +8,10 @@ import type { Ability } from "@/integrations/supabase/database.types";
 interface AbilitiesSelectorProps {
   selectedAbilities: string[];
   onAbilitiesChange: (abilityIds: string[]) => void;
+  agentType?: string;
 }
 
-const AbilitiesSelector = ({ selectedAbilities, onAbilitiesChange }: AbilitiesSelectorProps) => {
+const AbilitiesSelector = ({ selectedAbilities, onAbilitiesChange, agentType }: AbilitiesSelectorProps) => {
   const [abilities, setAbilities] = useState<Ability[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -48,6 +49,17 @@ const AbilitiesSelector = ({ selectedAbilities, onAbilitiesChange }: AbilitiesSe
   };
 
   const categories = [...new Set(abilities.map(a => a.category))];
+  
+  // Filter abilities based on agent type, prioritizing matching category
+  const filteredAbilities = agentType && agentType !== 'general'
+    ? abilities.sort((a, b) => {
+        const aMatches = a.category === agentType;
+        const bMatches = b.category === agentType;
+        if (aMatches && !bMatches) return -1;
+        if (!aMatches && bMatches) return 1;
+        return 0;
+      })
+    : abilities;
 
   if (loading) {
     return <div className="text-center py-8 text-muted-foreground">Loading abilities...</div>;
@@ -61,6 +73,11 @@ const AbilitiesSelector = ({ selectedAbilities, onAbilitiesChange }: AbilitiesSe
           <p className="text-sm text-muted-foreground">
             Select skills your agent should have ({selectedAbilities.length} selected)
           </p>
+          {agentType && agentType !== 'general' && (
+            <p className="text-xs text-primary mt-1">
+              ✨ Specialized abilities for {agentType} agents are highlighted
+            </p>
+          )}
         </div>
       </div>
 
@@ -76,7 +93,7 @@ const AbilitiesSelector = ({ selectedAbilities, onAbilitiesChange }: AbilitiesSe
 
         <TabsContent value="all" className="mt-4">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {abilities.map(ability => (
+            {filteredAbilities.map(ability => (
               <AbilityCard
                 key={ability.id}
                 ability={ability}
