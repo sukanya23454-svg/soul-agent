@@ -78,13 +78,14 @@ serve(async (req) => {
     }
 
     // Build messages for Groq
+    // Map 'agent' role to 'assistant' for Groq API compatibility
     const groqMessages = [
       {
         role: 'system',
         content: `You are ${agent.name}. ${agent.description}\n\nPersonality: ${agent.personality}\n\nInstructions: ${agent.instructions}`
       },
       ...(messages || []).map(m => ({
-        role: m.role,
+        role: m.role === 'agent' ? 'assistant' : m.role,
         content: m.content
       })),
       {
