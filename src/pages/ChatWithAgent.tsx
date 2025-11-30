@@ -152,14 +152,22 @@ const ChatWithAgent = () => {
     setInputMessage("");
     setLoading(true);
 
+    // Optimistically add user message to UI
+    const optimisticUserMsg: Message = {
+      id: `temp-user-${Date.now()}`,
+      agent_id: agentId,
+      role: 'user',
+      content: userMessage,
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, optimisticUserMsg]);
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
         return;
       }
-
-      // User message will be stored by the chat-with-agent edge function
 
       // Call edge function to get AI response
       const { data: functionData, error: functionError } = await supabase.functions.invoke('chat-with-agent', {
@@ -178,17 +186,27 @@ const ChatWithAgent = () => {
         throw new Error('No response from AI');
       }
 
-      // Refresh messages to get AI response
-      const { data: msgData } = await supabase
+      // Refresh messages from database to get the complete conversation
+      const { data: msgData, error: msgError } = await supabase
         .from("messages")
         .select("*")
         .eq("agent_id", agentId)
         .order("created_at", { ascending: true });
 
+      if (msgError) {
+        console.error('Error fetching messages:', msgError);
+        // Keep optimistic message if fetch fails
+        return;
+      }
+
+      // Replace all messages with fresh data from database
       if (msgData) {
         setMessages(msgData);
       }
     } catch (error: any) {
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticUserMsg.id));
+      
       toast({
         title: "Error",
         description: error.message || "Failed to send message",
