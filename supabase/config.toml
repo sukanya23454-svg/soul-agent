@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.process-automations]
 verify_jwt = false
+
+[functions.analyze-file]
+verify_jwt = true
