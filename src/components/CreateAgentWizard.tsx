@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Upload, User, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, ArrowRight, Upload, User, Sparkles, Globe, Lock } from "lucide-react";
 import AbilitiesSelector from "@/components/AbilitiesSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +33,7 @@ const CreateAgentWizard = ({ onComplete, onCancel }: CreateAgentWizardProps) => 
   // Step 3: Avatar
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isPublic, setIsPublic] = useState(false);
 
   const totalSteps = 3;
   const progress = (currentStep / totalSteps) * 100;
@@ -102,6 +105,8 @@ const CreateAgentWizard = ({ onComplete, onCancel }: CreateAgentWizardProps) => 
           personality,
           instructions,
           avatar_url: avatarUrl,
+          is_public: isPublic,
+          published_at: isPublic ? new Date().toISOString() : null,
         })
         .select()
         .single();
@@ -266,7 +271,7 @@ const CreateAgentWizard = ({ onComplete, onCancel }: CreateAgentWizardProps) => 
               )}
             </div>
 
-            <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+            <div className="bg-muted/30 p-4 rounded-lg space-y-2 mb-4">
               <h3 className="font-semibold">Review Your Agent</h3>
               <div className="space-y-1 text-sm">
                 <p><span className="text-muted-foreground">Name:</span> {name}</p>
@@ -275,6 +280,33 @@ const CreateAgentWizard = ({ onComplete, onCancel }: CreateAgentWizardProps) => 
                 <p><span className="text-muted-foreground">Avatar:</span> {avatarFile ? "Uploaded" : "None"}</p>
               </div>
             </div>
+
+            <Card className="p-4 bg-card/50 border-border/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {isPublic ? (
+                    <Globe className="w-5 h-5 text-primary" />
+                  ) : (
+                    <Lock className="w-5 h-5 text-muted-foreground" />
+                  )}
+                  <div>
+                    <Label htmlFor="publish-toggle" className="font-semibold cursor-pointer">
+                      {isPublic ? "Publish to Marketplace" : "Keep Private"}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {isPublic
+                        ? "Anyone can view, chat with, and clone your agent"
+                        : "Only you can see and use this agent"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="publish-toggle"
+                  checked={isPublic}
+                  onCheckedChange={setIsPublic}
+                />
+              </div>
+            </Card>
           </div>
         )}
 

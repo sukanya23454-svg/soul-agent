@@ -44,6 +44,44 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_feed: {
+        Row: {
+          activity_type: string
+          agent_id: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          target_user_id: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target_user_id?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_feed_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_abilities: {
         Row: {
           ability_id: string
@@ -136,6 +174,41 @@ export type Database = {
           },
         ]
       }
+      agent_comments: {
+        Row: {
+          agent_id: string
+          comment: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          comment: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          comment?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_comments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_files: {
         Row: {
           agent_id: string
@@ -176,6 +249,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "agent_files_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_likes: {
+        Row: {
+          agent_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_likes_agent_id_fkey"
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
@@ -269,6 +371,7 @@ export type Database = {
           id: string
           instructions: string | null
           is_public: boolean | null
+          like_count: number | null
           name: string
           original_agent_id: string | null
           personality: string | null
@@ -287,6 +390,7 @@ export type Database = {
           id?: string
           instructions?: string | null
           is_public?: boolean | null
+          like_count?: number | null
           name: string
           original_agent_id?: string | null
           personality?: string | null
@@ -305,6 +409,7 @@ export type Database = {
           id?: string
           instructions?: string | null
           is_public?: boolean | null
+          like_count?: number | null
           name?: string
           original_agent_id?: string | null
           personality?: string | null
@@ -422,6 +527,51 @@ export type Database = {
           total_messages?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_follows: {
+        Row: {
+          created_at: string | null
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          username?: string | null
         }
         Relationships: []
       }

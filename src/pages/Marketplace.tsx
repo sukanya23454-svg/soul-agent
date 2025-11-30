@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Bot, Star, Copy, Search, TrendingUp, Clock, Users } from "lucide-react";
+import { ArrowLeft, Bot, Star, Copy, Search, TrendingUp, Clock, Users, Heart, MessageSquare, Trophy, Activity } from "lucide-react";
 import type { Agent } from "@/integrations/supabase/database.types";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -28,8 +28,31 @@ const Marketplace = () => {
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState("");
   const [submittingRating, setSubmittingRating] = useState(false);
+  const [likedAgents, setLikedAgents] = useState<Set<string>>(new Set());
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setCurrentUserId(user.id);
+      
+      // Load liked agents
+      const { data: likes } = await supabase
+        .from("agent_likes")
+        .select("agent_id")
+        .eq("user_id", user.id);
+      
+      if (likes) {
+        setLikedAgents(new Set(likes.map(l => l.agent_id)));
+      }
+    }
+  };
 
   const fetchAgents = async () => {
     setLoading(true);
@@ -171,6 +194,50 @@ const Marketplace = () => {
     }
   };
 
+  const handleLike = async (agentId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!currentUserId) {
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      const isLiked = likedAgents.has(agentId);
+      
+      if (isLiked) {
+        await supabase
+          .from("agent_likes")
+          .delete()
+          .eq("agent_id", agentId)
+          .eq("user_id", currentUserId);
+        
+        setLikedAgents(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(agentId);
+          return newSet;
+        });
+      } else {
+        await supabase
+          .from("agent_likes")
+          .insert({
+            agent_id: agentId,
+            user_id: currentUserId,
+          });
+        
+        setLikedAgents(prev => new Set(prev).add(agentId));
+      }
+
+      fetchAgents(); // Refresh to show updated like count
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredAgents = agents.filter(agent =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     agent.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -206,6 +273,18 @@ const Marketplace = () => {
             </div>
 
             <div className="flex gap-2">
+              <Link to="/leaderboards">
+                <Button variant="outline" size="sm">
+                  <Trophy className="mr-2 h-4 w-4" />
+                  Leaderboards
+                </Button>
+              </Link>
+              <Link to="/activity">
+                <Button variant="outline" size="sm">
+                  <Activity className="mr-2 h-4 w-4" />
+                  Activity
+                </Button>
+              </Link>
               <Button
                 variant={sortBy === "popular" ? "default" : "outline"}
                 size="sm"
@@ -262,17 +341,20 @@ const Marketplace = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-bold mb-1 truncate">{agent.name}</h3>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                         {agent.rating_count > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-primary text-primary" />
                             <span>{agent.rating_average.toFixed(1)}</span>
-                            <span>({agent.rating_count})</span>
                           </div>
                         )}
                         <div className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          <span>{agent.clone_count} clones</span>
+                          <Heart className="w-3 h-3" />
+                          <span>{agent.like_count || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Copy className="w-3 h-3" />
+                          <span>{agent.clone_count}</span>
                         </div>
                       </div>
                     </div>
@@ -286,20 +368,38 @@ const Marketplace = () => {
                     <Button
                       size="sm"
                       className="flex-1"
-                      onClick={() => handleClone(agent)}
+                      onClick={() => navigate(`/chat/${agent.id}`)}
                     >
-                      <Copy className="w-4 h-4 mr-2" />
-                      Clone
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Chat
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
+                      onClick={(e) => handleLike(agent.id, e)}
+                    >
+                      <Heart className={`w-4 h-4 ${likedAgents.has(agent.id) ? 'fill-red-400 text-red-400' : ''}`} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setSelectedAgent(agent);
                         setShowRatingDialog(true);
                       }}
                     >
                       <Star className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleClone(agent);
+                      }}
+                    >
+                      <Copy className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>

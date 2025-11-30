@@ -12,6 +12,9 @@ import CreateAgent from "./pages/CreateAgent";
 import ChatWithAgent from "./pages/ChatWithAgent";
 import Files from "./pages/Files";
 import Marketplace from "./pages/Marketplace";
+import UserProfile from "./pages/UserProfile";
+import ActivityFeed from "./pages/ActivityFeed";
+import Leaderboards from "./pages/Leaderboards";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +34,9 @@ const App = () => (
           <Route path="/chat/:agentId" element={<ChatWithAgent />} />
           <Route path="/files" element={<Files />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/profile/:userId" element={<UserProfile />} />
+          <Route path="/activity" element={<ActivityFeed />} />
+          <Route path="/leaderboards" element={<Leaderboards />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
