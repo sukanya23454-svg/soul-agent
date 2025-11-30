@@ -1,0 +1,159 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { conversationId, message } = await req.json();
+    
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const groqApiKey = Deno.env.get('GROQ_API_KEY');
+
+    if (!groqApiKey) {
+      throw new Error('GROQ_API_KEY not configured');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get user from JWT
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      throw new Error('Unauthorized');
+    }
+
+    console.log('Processing chat for user:', user.id, 'conversation:', conversationId);
+
+    // Get conversation and agent
+    const { data: conversation, error: convError } = await supabase
+      .from('conversations')
+      .select('*, agents(*)')
+      .eq('id', conversationId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (convError || !conversation) {
+      throw new Error('Conversation not found');
+    }
+
+    // Get conversation history
+    const { data: messages, error: msgError } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+    if (msgError) {
+      throw new Error('Failed to fetch messages');
+    }
+
+    console.log('Fetched', messages?.length || 0, 'previous messages');
+
+    // Save user message
+    const { error: insertError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationId,
+        role: 'user',
+        content: message
+      });
+
+    if (insertError) {
+      throw new Error('Failed to save user message');
+    }
+
+    // Build messages for Groq
+    const agent = conversation.agents;
+    const groqMessages = [
+      {
+        role: 'system',
+        content: `You are ${agent.name}. ${agent.description}\n\nPersonality: ${agent.personality}\n\nInstructions: ${agent.instructions}`
+      },
+      ...(messages || []).map(m => ({
+        role: m.role,
+        content: m.content
+      })),
+      {
+        role: 'user',
+        content: message
+      }
+    ];
+
+    console.log('Calling Groq API with', groqMessages.length, 'messages');
+
+    // Call Groq API
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${groqApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: groqMessages,
+        temperature: 0.7,
+        max_tokens: 1024,
+      }),
+    });
+
+    if (!groqResponse.ok) {
+      const errorText = await groqResponse.text();
+      console.error('Groq API error:', groqResponse.status, errorText);
+      throw new Error(`Groq API error: ${groqResponse.status}`);
+    }
+
+    const groqData = await groqResponse.json();
+    const assistantMessage = groqData.choices[0]?.message?.content;
+
+    if (!assistantMessage) {
+      throw new Error('No response from Groq');
+    }
+
+    console.log('Got response from Groq, length:', assistantMessage.length);
+
+    // Save assistant message
+    const { error: assistantInsertError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationId,
+        role: 'assistant',
+        content: assistantMessage
+      });
+
+    if (assistantInsertError) {
+      console.error('Failed to save assistant message:', assistantInsertError);
+      throw new Error('Failed to save assistant message');
+    }
+
+    return new Response(
+      JSON.stringify({ message: assistantMessage }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error in chat-with-agent:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+});

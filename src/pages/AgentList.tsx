@@ -1,52 +1,129 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Plus, Bot } from "lucide-react";
+import { ArrowLeft, Plus, Bot, LogOut, MessageSquare } from "lucide-react";
+import type { Agent } from "@/integrations/supabase/database.types";
+import { useToast } from "@/hooks/use-toast";
 
 const AgentList = () => {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("agents")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching agents:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load agents",
+          variant: "destructive",
+        });
+      } else {
+        setAgents(data || []);
+      }
+
+      setLoading(false);
+    };
+
+    init();
+  }, [navigate, toast]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-12">
           <div className="space-y-2">
-            <Link to="/">
-              <Button variant="ghost" size="sm" className="mb-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Home
+            <div className="flex items-center gap-4">
+              <Link to="/">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Home
+                </Button>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
               </Button>
-            </Link>
+            </div>
             <h1 className="text-4xl font-bold text-gradient">Your AI Agents</h1>
             <p className="text-muted-foreground">
               Create and manage your custom AI agents
             </p>
           </div>
-          <Button size="lg" className="glow-cyan">
-            <Plus className="mr-2" />
-            Create New Agent
-          </Button>
+          <Link to="/create-agent">
+            <Button size="lg" className="glow-cyan">
+              <Plus className="mr-2" />
+              Create New Agent
+            </Button>
+          </Link>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Placeholder cards */}
-          {[1, 2, 3].map((i) => (
-            <Card
-              key={i}
-              className="p-8 bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 hover:scale-105 cursor-pointer"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Bot className="w-6 h-6 text-primary" />
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading your agents...</p>
+          </div>
+        ) : agents.length === 0 ? (
+          <Card className="p-12 text-center bg-card/50 backdrop-blur-sm border-border/50">
+            <Bot className="w-16 h-16 mx-auto mb-4 text-primary/50" />
+            <h3 className="text-xl font-bold mb-2">No agents yet</h3>
+            <p className="text-muted-foreground mb-6">
+              Create your first AI agent to get started
+            </p>
+            <Link to="/create-agent">
+              <Button className="glow-cyan">
+                <Plus className="mr-2" />
+                Create Your First Agent
+              </Button>
+            </Link>
+          </Card>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {agents.map((agent) => (
+              <Card
+                key={agent.id}
+                className="p-8 bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 hover:scale-105 cursor-pointer group"
+                onClick={() => navigate(`/chat/${agent.id}`)}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <Bot className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <h3 className="text-xl font-bold">{agent.name}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {agent.description || agent.personality}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-primary">
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Start chatting</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 space-y-2">
-                  <h3 className="text-xl font-bold">Agent {i}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Click to start building your first agent
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
