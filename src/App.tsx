@@ -12,6 +12,7 @@ import CreateAgent from "./pages/CreateAgent";
 import ChatWithAgent from "./pages/ChatWithAgent";
 import Files from "./pages/Files";
 import Marketplace from "./pages/Marketplace";
+import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
 import ActivityFeed from "./pages/ActivityFeed";
 import Leaderboards from "./pages/Leaderboards";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/chat/:agentId" element={<ChatWithAgent />} />
           <Route path="/files" element={<Files />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/activity" element={<ActivityFeed />} />
           <Route path="/leaderboards" element={<Leaderboards />} />

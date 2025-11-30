@@ -127,6 +127,9 @@ const Dashboard = () => {
               <Button variant="ghost" size="icon" onClick={() => navigate("/agents")}>
                 <Users className="w-5 h-5" />
               </Button>
+              <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
+                <Settings className="w-5 h-5" />
+              </Button>
               <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="w-5 h-5" />
               </Button>
