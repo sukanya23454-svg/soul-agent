@@ -6,12 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send } from "lucide-react";
-import type { Agent, Conversation, Message } from "@/integrations/supabase/database.types";
+import type { Agent, Message } from "@/integrations/supabase/database.types";
 
 const ChatWithAgent = () => {
   const { agentId } = useParams();
   const [agent, setAgent] = useState<Agent | null>(null);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,6 +27,16 @@ const ChatWithAgent = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
+        return;
+      }
+
+      if (!agentId) {
+        toast({
+          title: "Error",
+          description: "Agent ID is missing",
+          variant: "destructive",
+        });
+        navigate("/agents");
         return;
       }
 
@@ -51,54 +60,15 @@ const ChatWithAgent = () => {
 
       setAgent(agentData);
 
-      // Create or get conversation
-      const { data: convData, error: convError } = await supabase
-        .from("conversations")
+      // Get messages for this agent
+      const { data: msgData, error: msgError } = await supabase
+        .from("messages")
         .select("*")
         .eq("agent_id", agentId)
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
+        .order("created_at", { ascending: true });
 
-      if (convError) {
-        console.error("Error fetching conversation:", convError);
-      }
-
-      let currentConv = convData?.[0];
-
-      if (!currentConv) {
-        // Create new conversation
-        const { data: newConv, error: createError } = await supabase
-          .from("conversations")
-          .insert({
-            agent_id: agentId!,
-            user_id: session.user.id,
-            title: `Chat with ${agentData.name}`,
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          console.error("Error creating conversation:", createError);
-          return;
-        }
-
-        currentConv = newConv;
-      }
-
-      setConversation(currentConv);
-
-      // Get messages
-      if (currentConv) {
-        const { data: msgData, error: msgError } = await supabase
-          .from("messages")
-          .select("*")
-          .eq("conversation_id", currentConv.id)
-          .order("created_at", { ascending: true });
-
-        if (!msgError && msgData) {
-          setMessages(msgData);
-        }
+      if (!msgError && msgData) {
+        setMessages(msgData);
       }
     };
 
@@ -106,21 +76,11 @@ const ChatWithAgent = () => {
   }, [agentId, navigate, toast]);
 
   const handleSend = async () => {
-    if (!inputMessage.trim() || !conversation || loading) return;
+    if (!inputMessage.trim() || !agentId || loading) return;
 
     const userMessage = inputMessage.trim();
     setInputMessage("");
     setLoading(true);
-
-    // Add user message to UI immediately
-    const tempUserMsg: Message = {
-      id: 'temp-' + Date.now(),
-      conversation_id: conversation.id,
-      role: 'user',
-      content: userMessage,
-      created_at: new Date().toISOString(),
-    };
-    setMessages(prev => [...prev, tempUserMsg]);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -129,9 +89,30 @@ const ChatWithAgent = () => {
         return;
       }
 
+      // Insert user message
+      const { data: userMsg, error: userError } = await supabase
+        .from("messages")
+        .insert({
+          agent_id: agentId,
+          role: "user",
+          content: userMessage,
+        })
+        .select()
+        .single();
+
+      if (userError) {
+        throw userError;
+      }
+
+      // Add user message to UI
+      if (userMsg) {
+        setMessages(prev => [...prev, userMsg]);
+      }
+
+      // Call edge function to get AI response
       const response = await supabase.functions.invoke('chat-with-agent', {
         body: {
-          conversationId: conversation.id,
+          agentId: agentId,
           message: userMessage,
         },
       });
@@ -140,11 +121,11 @@ const ChatWithAgent = () => {
         throw new Error(response.error.message);
       }
 
-      // Refresh messages
+      // Refresh messages to get AI response
       const { data: msgData } = await supabase
         .from("messages")
         .select("*")
-        .eq("conversation_id", conversation.id)
+        .eq("agent_id", agentId)
         .order("created_at", { ascending: true });
 
       if (msgData) {
@@ -156,8 +137,6 @@ const ChatWithAgent = () => {
         description: error.message || "Failed to send message",
         variant: "destructive",
       });
-      // Remove temp message on error
-      setMessages(prev => prev.filter(m => m.id !== tempUserMsg.id));
     } finally {
       setLoading(false);
     }
@@ -227,12 +206,12 @@ const ChatWithAgent = () => {
               placeholder="Type your message..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
               className="bg-background/50"
               disabled={loading}
             />
             <Button
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={loading || !inputMessage.trim()}
               className="glow-cyan"
             >
