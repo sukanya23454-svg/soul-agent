@@ -36,8 +36,8 @@ const Index = () => {
               <br />
               No code, no chaos — just pure brain power.
             </h2>
-            <div className="pt-4">
-              <Link to="/agents">
+            <div className="pt-4 flex gap-4 justify-center">
+              <Link to="/auth">
                 <Button size="lg" className="text-lg px-8 py-6 glow-cyan hover:scale-105 transition-all">
                   Start Building <ArrowRight className="ml-2" />
                 </Button>
