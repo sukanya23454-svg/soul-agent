@@ -110,15 +110,20 @@ const ChatWithAgent = () => {
       }
 
       // Call edge function to get AI response
-      const response = await supabase.functions.invoke('chat-with-agent', {
+      const { data: functionData, error: functionError } = await supabase.functions.invoke('chat-with-agent', {
         body: {
           agentId: agentId,
           message: userMessage,
         },
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (functionError) {
+        console.error('Edge function error:', functionError);
+        throw new Error(functionError.message || 'Failed to get AI response');
+      }
+
+      if (!functionData) {
+        throw new Error('No response from AI');
       }
 
       // Refresh messages to get AI response
@@ -179,7 +184,7 @@ const ChatWithAgent = () => {
               >
                 <div className="space-y-2">
                   <div className="text-xs font-medium text-muted-foreground">
-                    {msg.role === "user" ? "You" : agent?.name}
+                    {msg.role === "user" ? "You" : agent?.name || "Agent"}
                   </div>
                   <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
                 </div>

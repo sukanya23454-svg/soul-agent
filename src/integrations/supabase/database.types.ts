@@ -12,7 +12,7 @@ export interface Agent {
 export interface Message {
   id: string;
   agent_id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'agent';
   content: string;
   created_at: string;
 }
