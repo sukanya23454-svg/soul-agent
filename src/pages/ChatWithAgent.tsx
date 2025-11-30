@@ -159,20 +159,7 @@ const ChatWithAgent = () => {
         return;
       }
 
-      // Insert user message
-      const { data: userMsg, error: userError } = await supabase
-        .from("messages")
-        .insert({
-          agent_id: agentId,
-          role: "user",
-          content: userMessage,
-        })
-        .select()
-        .single();
-
-      if (userError) {
-        throw userError;
-      }
+      // User message will be stored by the chat-with-agent edge function
 
       // Call edge function to get AI response
       const { data: functionData, error: functionError } = await supabase.functions.invoke('chat-with-agent', {
