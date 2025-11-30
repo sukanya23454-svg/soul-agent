@@ -38,10 +38,14 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Load agents
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Load agents (both private and published)
       const { data: agentsData } = await supabase
         .from("agents")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       setAgents(agentsData || []);
@@ -203,7 +207,7 @@ const Dashboard = () => {
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Active Agents */}
+          {/* Active Agents - Separated by Private/Published */}
           <Card className="lg:col-span-2 p-6 bg-card/50 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">Your Agents</h2>
@@ -220,24 +224,58 @@ const Dashboard = () => {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
-                {agents.slice(0, 5).map((agent) => (
-                  <div
-                    key={agent.id}
-                    className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/chat/${agent.id}`)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold mb-1">{agent.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
-                          {agent.description}
-                        </p>
-                      </div>
-                      <Badge variant="secondary">{agent.personality}</Badge>
+              <div className="space-y-6">
+                {/* Private Agents */}
+                {agents.filter(a => !a.is_public).length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-3">Private Agents</h3>
+                    <div className="space-y-3">
+                      {agents.filter(a => !a.is_public).slice(0, 3).map((agent) => (
+                        <div
+                          key={agent.id}
+                          className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/chat/${agent.id}`)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold mb-1">{agent.name}</h3>
+                              <p className="text-sm text-muted-foreground line-clamp-1">
+                                {agent.description}
+                              </p>
+                            </div>
+                            <Badge variant="secondary">Private</Badge>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* Published Agents */}
+                {agents.filter(a => a.is_public).length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-3">Published Agents</h3>
+                    <div className="space-y-3">
+                      {agents.filter(a => a.is_public).slice(0, 3).map((agent) => (
+                        <div
+                          key={agent.id}
+                          className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/chat/${agent.id}`)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold mb-1">{agent.name}</h3>
+                              <p className="text-sm text-muted-foreground line-clamp-1">
+                                {agent.description}
+                              </p>
+                            </div>
+                            <Badge variant="default">Published</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </Card>

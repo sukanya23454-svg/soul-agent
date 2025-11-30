@@ -13,6 +13,8 @@ export interface Agent {
   rating_average: number;
   rating_count: number;
   original_agent_id: string | null;
+  avatar_url: string | null;
+  like_count: number;
 }
 
 export interface AgentRating {
