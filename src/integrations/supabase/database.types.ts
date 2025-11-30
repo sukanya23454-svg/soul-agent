@@ -43,3 +43,19 @@ export interface AgentMemory {
   created_at: string;
   last_accessed: string;
 }
+
+export interface AgentAutomation {
+  id: string;
+  agent_id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  frequency: string;
+  time_of_day: string | null;
+  action_type: 'send_message' | 'summarize_chat' | 'reminder' | 'auto_save_notes';
+  action_config: Record<string, any>;
+  is_active: boolean;
+  next_run_at: string | null;
+  last_run_at: string | null;
+  created_at: string;
+}

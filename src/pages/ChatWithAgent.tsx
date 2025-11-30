@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send } from "lucide-react";
-import type { Agent, Message } from "@/integrations/supabase/database.types";
+import { ArrowLeft, Send, Zap } from "lucide-react";
+import type { Agent, Message, AgentAutomation } from "@/integrations/supabase/database.types";
+import { AutomationCard } from "@/components/AutomationCard";
+import { CreateAutomationDialog } from "@/components/CreateAutomationDialog";
 
 const ChatWithAgent = () => {
   const { agentId } = useParams();
@@ -14,6 +16,8 @@ const ChatWithAgent = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAutomations, setShowAutomations] = useState(false);
+  const [automations, setAutomations] = useState<AgentAutomation[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -77,7 +81,60 @@ const ChatWithAgent = () => {
     };
 
     init();
+    loadAutomations();
   }, [agentId, navigate, toast]);
+
+  const loadAutomations = async () => {
+    if (!agentId) return;
+    
+    const { data, error } = await supabase
+      .from('agent_automations')
+      .select('*')
+      .eq('agent_id', agentId)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setAutomations(data);
+    }
+  };
+
+  const handleToggleAutomation = async (id: string, isActive: boolean) => {
+    const { error } = await supabase
+      .from('agent_automations')
+      .update({ is_active: isActive })
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update automation",
+        variant: "destructive",
+      });
+    } else {
+      loadAutomations();
+    }
+  };
+
+  const handleDeleteAutomation = async (id: string) => {
+    const { error } = await supabase
+      .from('agent_automations')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete automation",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Automation deleted",
+      });
+      loadAutomations();
+    }
+  };
 
   const handleSend = async () => {
     if (!inputMessage.trim() || !agentId || loading) return;
@@ -170,9 +227,45 @@ const ChatWithAgent = () => {
                 </div>
               )}
             </div>
+            <Button
+              variant={showAutomations ? "default" : "outline"}
+              onClick={() => setShowAutomations(!showAutomations)}
+            >
+              <Zap className="mr-2 h-4 w-4" />
+              Automations
+            </Button>
           </div>
         </div>
       </div>
+
+      {showAutomations && (
+        <div className="border-b border-border/50 bg-card/20">
+          <div className="container mx-auto px-4 py-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Agent Automations</h2>
+                <CreateAutomationDialog agentId={agentId!} onSuccess={loadAutomations} />
+              </div>
+              {automations.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">No automations yet. Create one to get started!</p>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {automations.map((automation) => (
+                    <AutomationCard
+                      key={automation.id}
+                      automation={automation}
+                      onToggle={handleToggleAutomation}
+                      onDelete={handleDeleteAutomation}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
