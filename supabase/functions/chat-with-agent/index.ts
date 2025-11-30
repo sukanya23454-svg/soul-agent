@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { conversationId, message } = await req.json();
+    const { agentId, message } = await req.json();
     
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -37,25 +37,25 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    console.log('Processing chat for user:', user.id, 'conversation:', conversationId);
+    console.log('Processing chat for user:', user.id, 'agent:', agentId);
 
-    // Get conversation and agent
-    const { data: conversation, error: convError } = await supabase
-      .from('conversations')
-      .select('*, agents(*)')
-      .eq('id', conversationId)
+    // Get agent
+    const { data: agent, error: agentError } = await supabase
+      .from('agents')
+      .select('*')
+      .eq('id', agentId)
       .eq('user_id', user.id)
       .single();
 
-    if (convError || !conversation) {
-      throw new Error('Conversation not found');
+    if (agentError || !agent) {
+      throw new Error('Agent not found');
     }
 
-    // Get conversation history
+    // Get message history for this agent
     const { data: messages, error: msgError } = await supabase
       .from('messages')
       .select('*')
-      .eq('conversation_id', conversationId)
+      .eq('agent_id', agentId)
       .order('created_at', { ascending: true });
 
     if (msgError) {
@@ -68,7 +68,7 @@ serve(async (req) => {
     const { error: insertError } = await supabase
       .from('messages')
       .insert({
-        conversation_id: conversationId,
+        agent_id: agentId,
         role: 'user',
         content: message
       });
@@ -78,7 +78,6 @@ serve(async (req) => {
     }
 
     // Build messages for Groq
-    const agent = conversation.agents;
     const groqMessages = [
       {
         role: 'system',
@@ -130,8 +129,8 @@ serve(async (req) => {
     const { error: assistantInsertError } = await supabase
       .from('messages')
       .insert({
-        conversation_id: conversationId,
-        role: 'assistant',
+        agent_id: agentId,
+        role: 'agent',
         content: assistantMessage
       });
 

@@ -21,7 +21,7 @@ export type Database = {
           goal: string | null
           id: string
           instructions: string | null
-          name: string | null
+          name: string
           personality: string | null
           style: string | null
           user_id: string
@@ -32,7 +32,7 @@ export type Database = {
           goal?: string | null
           id?: string
           instructions?: string | null
-          name?: string | null
+          name: string
           personality?: string | null
           style?: string | null
           user_id: string
@@ -43,7 +43,7 @@ export type Database = {
           goal?: string | null
           id?: string
           instructions?: string | null
-          name?: string | null
+          name?: string
           personality?: string | null
           style?: string | null
           user_id?: string
@@ -53,21 +53,21 @@ export type Database = {
       messages: {
         Row: {
           agent_id: string
-          content: string | null
+          content: string
           created_at: string | null
           id: string
           role: string | null
         }
         Insert: {
           agent_id: string
-          content?: string | null
+          content: string
           created_at?: string | null
           id?: string
           role?: string | null
         }
         Update: {
           agent_id?: string
-          content?: string | null
+          content?: string
           created_at?: string | null
           id?: string
           role?: string | null
