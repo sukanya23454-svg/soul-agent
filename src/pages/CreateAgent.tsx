@@ -7,12 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import AbilitiesSelector from "@/components/AbilitiesSelector";
 
 const CreateAgent = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [personality, setPersonality] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [selectedAbilities, setSelectedAbilities] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -37,19 +39,38 @@ const CreateAgent = () => {
         return;
       }
 
-      const { error } = await supabase.from("agents").insert({
-        user_id: session.user.id,
-        name,
-        description,
-        personality,
-        instructions,
-      });
+      // Create the agent
+      const { data: agent, error: agentError } = await supabase
+        .from("agents")
+        .insert({
+          user_id: session.user.id,
+          name,
+          description,
+          personality,
+          instructions,
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (agentError) throw agentError;
+
+      // Add selected abilities
+      if (selectedAbilities.length > 0 && agent) {
+        const abilityInserts = selectedAbilities.map(abilityId => ({
+          agent_id: agent.id,
+          ability_id: abilityId,
+        }));
+
+        const { error: abilitiesError } = await supabase
+          .from("agent_abilities")
+          .insert(abilityInserts);
+
+        if (abilitiesError) throw abilitiesError;
+      }
 
       toast({
         title: "Success!",
-        description: "Your AI agent has been created.",
+        description: "Your AI agent has been created with selected abilities.",
       });
 
       navigate("/agents");
@@ -124,6 +145,13 @@ const CreateAgent = () => {
                   onChange={(e) => setInstructions(e.target.value)}
                   required
                   className="bg-background/50 min-h-[150px]"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border/50">
+                <AbilitiesSelector
+                  selectedAbilities={selectedAbilities}
+                  onAbilitiesChange={setSelectedAbilities}
                 />
               </div>
 

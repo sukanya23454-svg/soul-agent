@@ -14,6 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
+      abilities: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          icon: string | null
+          id: string
+          name: string
+          prompt_template: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          icon?: string | null
+          id?: string
+          name: string
+          prompt_template: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          prompt_template?: string
+        }
+        Relationships: []
+      }
+      agent_abilities: {
+        Row: {
+          ability_id: string
+          agent_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          ability_id: string
+          agent_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          ability_id?: string
+          agent_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_abilities_ability_id_fkey"
+            columns: ["ability_id"]
+            isOneToOne: false
+            referencedRelation: "abilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_abilities_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_memories: {
+        Row: {
+          agent_id: string
+          content: string
+          created_at: string | null
+          id: string
+          importance: number | null
+          last_accessed: string | null
+          memory_type: string
+        }
+        Insert: {
+          agent_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          importance?: number | null
+          last_accessed?: string | null
+          memory_type: string
+        }
+        Update: {
+          agent_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          importance?: number | null
+          last_accessed?: string | null
+          memory_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_memories_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           created_at: string | null

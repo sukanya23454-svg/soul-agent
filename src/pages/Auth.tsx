@@ -90,13 +90,13 @@ const Auth = () => {
         <Card className="p-8 bg-card/50 backdrop-blur-sm border-border/50">
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h1 className="text-3xl font-bold text-gradient">
-                {isLogin ? "Welcome Back" : "Create Account"}
+              <h1 className="text-4xl font-bold text-gradient">
+                {isLogin ? "Welcome Back" : "Join the Platform"}
               </h1>
               <p className="text-muted-foreground">
                 {isLogin
                   ? "Sign in to access your AI agents"
-                  : "Sign up to start building AI agents"}
+                  : "Start building your AI team today"}
               </p>
             </div>
 
