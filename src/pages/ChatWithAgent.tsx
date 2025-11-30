@@ -18,6 +18,10 @@ const ChatWithAgent = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const removeBoldMarkers = (text: string) => {
+    return text.replace(/\*\*/g, '');
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -186,7 +190,7 @@ const ChatWithAgent = () => {
                   <div className="text-xs font-medium text-muted-foreground">
                     {msg.role === "user" ? "You" : agent?.name || "Agent"}
                   </div>
-                  <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                  <div className="text-sm whitespace-pre-wrap">{removeBoldMarkers(msg.content)}</div>
                 </div>
               </Card>
             ))}
