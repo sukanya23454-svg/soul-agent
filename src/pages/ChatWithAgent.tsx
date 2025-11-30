@@ -174,11 +174,6 @@ const ChatWithAgent = () => {
         throw userError;
       }
 
-      // Add user message to UI
-      if (userMsg) {
-        setMessages(prev => [...prev, userMsg]);
-      }
-
       // Call edge function to get AI response
       const { data: functionData, error: functionError } = await supabase.functions.invoke('chat-with-agent', {
         body: {
