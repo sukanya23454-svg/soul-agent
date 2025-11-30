@@ -213,7 +213,7 @@ const Index = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Join thousands creating custom AI agents. No credit card required.
           </p>
-          <Link to="/auth">
+          <Link to="/auth" className="mt-6">
             <Button size="lg" className="text-lg px-10 py-7 glow-cyan hover:scale-105 transition-all">
               Get Started Free
               <ArrowRight className="ml-2" />
