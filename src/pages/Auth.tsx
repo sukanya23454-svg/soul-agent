@@ -125,7 +125,7 @@ const Auth = () => {
 
               <Button
                 type="submit"
-                className="w-full glow-cyan"
+                className="w-full glow-primary"
                 disabled={loading}
               >
                 {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}

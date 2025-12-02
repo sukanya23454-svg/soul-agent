@@ -3,59 +3,63 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  ArrowRight, Brain, Sparkles, Zap, Calendar, 
-  FileText, Heart, Lightbulb, Target, MessageSquare,
-  Shield, Globe, Rocket
+  ArrowRight, Layers, Sparkles, Zap, Calendar, 
+  FileText, TrendingUp, Lightbulb, Target, MessageSquare,
+  Database, Users, Rocket
 } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative overflow-hidden min-h-screen flex items-center justify-center">
-        {/* Animated background */}
+        {/* Subtle background pattern */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/5 rounded-full blur-3xl" />
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-5xl mx-auto text-center space-y-8 animate-fade-in">
+          <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
             <Badge className="mx-auto w-fit px-4 py-2 text-sm bg-primary/10 text-primary border-primary/20">
-              <Sparkles className="w-4 h-4 mr-2 inline" />
-              Universal AI Agent Platform
+              Build AI Agents Without Code
             </Badge>
             
-            <h1 className="text-6xl lg:text-8xl font-bold leading-tight tracking-tight">
-              Your AI.
+            <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tight">
+              Create AI Agents
               <br />
-              <span className="text-gradient">Your Rules.</span>
+              <span className="text-gradient">That Actually Work</span>
             </h1>
             
-            <p className="text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              Create powerful AI agents with custom abilities, personalities, and memory.
-              No code. No limits. Built for everyone.
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+              Design custom AI assistants with specific skills, personalities, and memory.
+              No coding required. Start building in minutes.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
               <Link to="/auth">
-                <Button size="lg" className="text-lg px-10 py-7 glow-cyan hover:scale-105 transition-all group">
-                  Start Building Free
-                  <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                <Button size="lg" className="text-base px-8 py-6 glow-primary hover:scale-105 transition-all">
+                  Get Started Free
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+              <Link to="/marketplace">
+                <Button variant="outline" size="lg" className="text-base px-8 py-6">
+                  Explore Templates
                 </Button>
               </Link>
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-12">
+            <div className="grid grid-cols-3 gap-6 max-w-md mx-auto pt-16">
               {[
-                { number: "12+", label: "Built-in Skills" },
-                { number: "∞", label: "Possibilities" },
-                { number: "100%", label: "Free to Start" }
+                { number: "12+", label: "Skills" },
+                { number: "Free", label: "To Start" },
+                { number: "5min", label: "Setup" }
               ].map((stat, i) => (
                 <div key={i} className="space-y-1">
-                  <div className="text-4xl font-bold text-gradient">{stat.number}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  <div className="text-2xl md:text-3xl font-bold text-primary">{stat.number}</div>
+                  <div className="text-xs text-muted-foreground">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -64,37 +68,35 @@ const Index = () => {
       </section>
 
       {/* Key Abilities Section */}
-      <section className="container mx-auto px-4 py-32">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-5xl lg:text-6xl font-bold">
-            <Zap className="inline text-secondary mr-3" />
-            Powerful Abilities
+      <section className="container mx-auto px-4 py-24">
+        <div className="text-center mb-12 space-y-3">
+          <h2 className="text-3xl md:text-4xl font-bold">
+            Give Your Agents Skills
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Give your agents superpowers. Mix and match skills to create the perfect assistant.
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Mix and match abilities to create the perfect assistant for your needs.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
           {[
-            { icon: FileText, name: "Summarize", color: "text-blue-400" },
-            { icon: Lightbulb, name: "Explain Simply", color: "text-yellow-400" },
-            { icon: Sparkles, name: "Create Content", color: "text-purple-400" },
-            { icon: Target, name: "Plan Tasks", color: "text-green-400" },
-            { icon: Brain, name: "Research", color: "text-cyan-400" },
-            { icon: Heart, name: "Motivate", color: "text-pink-400" },
-            { icon: Calendar, name: "Schedule", color: "text-orange-400" },
-            { icon: Zap, name: "Brainstorm", color: "text-indigo-400" }
+            { icon: FileText, name: "Summarize", desc: "Condense long texts" },
+            { icon: Lightbulb, name: "Explain", desc: "Simplify concepts" },
+            { icon: Sparkles, name: "Create", desc: "Generate content" },
+            { icon: Target, name: "Plan", desc: "Organize tasks" },
+            { icon: Layers, name: "Research", desc: "Find information" },
+            { icon: TrendingUp, name: "Analyze", desc: "Extract insights" },
+            { icon: Calendar, name: "Schedule", desc: "Manage time" },
+            { icon: Zap, name: "Brainstorm", desc: "Generate ideas" }
           ].map((ability, index) => (
             <Card
               key={index}
-              className="p-6 bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 hover:scale-105 hover:glow-subtle group"
+              className="p-5 bg-card border-border hover:border-primary/30 transition-all duration-200 hover:-translate-y-1"
             >
-              <div className="flex flex-col items-center text-center space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <ability.icon className={`w-7 h-7 ${ability.color}`} />
-                </div>
-                <h3 className="font-semibold">{ability.name}</h3>
+              <div className="flex flex-col items-start space-y-2">
+                <ability.icon className="w-5 h-5 text-primary" />
+                <h3 className="font-medium text-sm">{ability.name}</h3>
+                <p className="text-xs text-muted-foreground">{ability.desc}</p>
               </div>
             </Card>
           ))}
@@ -102,54 +104,49 @@ const Index = () => {
       </section>
 
       {/* Use Cases Section */}
-      <section className="container mx-auto px-4 py-32 bg-gradient-to-b from-background to-muted/10">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-5xl lg:text-6xl font-bold">Built for Everyone</h2>
-          <p className="text-xl text-muted-foreground">
-            From students to entrepreneurs. From beginners to experts.
+      <section className="container mx-auto px-4 py-24 bg-muted/30">
+        <div className="text-center mb-12 space-y-3">
+          <h2 className="text-3xl md:text-4xl font-bold">Built for Everyone</h2>
+          <p className="text-muted-foreground">
+            From students to professionals, there's an agent for you.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
           {[
             {
-              emoji: "🎓",
               title: "Students",
-              description: "Study smarter with AI tutors that explain concepts simply",
+              description: "Study smarter with AI tutors that explain concepts your way",
               examples: ["Math helper", "Language tutor", "Study planner"]
             },
             {
-              emoji: "💼",
               title: "Professionals",
-              description: "Boost productivity with AI assistants for work tasks",
+              description: "Boost productivity with assistants for everyday work tasks",
               examples: ["Email writer", "Meeting notes", "Task manager"]
             },
             {
-              emoji: "🎨",
               title: "Creators",
-              description: "Generate content and ideas faster than ever",
+              description: "Generate content and ideas faster than ever before",
               examples: ["Social posts", "Blog writer", "Idea generator"]
             },
             {
-              emoji: "💪",
-              title: "Health & Fitness",
-              description: "Stay motivated and track your wellness journey",
+              title: "Wellness",
+              description: "Stay motivated and track your health journey",
               examples: ["Workout plans", "Habit tracker", "Meal planner"]
             }
           ].map((useCase, index) => (
             <Card
               key={index}
-              className="p-8 bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 hover:scale-105 space-y-4"
+              className="p-6 bg-card border-border hover:border-primary/30 transition-all duration-200 space-y-4"
             >
-              <div className="text-6xl mb-4">{useCase.emoji}</div>
-              <h3 className="text-2xl font-bold">{useCase.title}</h3>
+              <h3 className="text-lg font-semibold">{useCase.title}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 {useCase.description}
               </p>
-              <div className="space-y-2 pt-2 border-t border-border/50">
+              <div className="space-y-1.5 pt-3 border-t border-border">
                 {useCase.examples.map((example, i) => (
-                  <div key={i} className="text-xs text-primary flex items-center">
-                    <span className="mr-2">→</span>
+                  <div key={i} className="text-xs text-primary/80 flex items-center">
+                    <span className="mr-2 text-primary">→</span>
                     {example}
                   </div>
                 ))}
@@ -160,41 +157,41 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-32">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl lg:text-6xl font-bold mb-4">
-            Why Choose Our Platform?
+      <section className="container mx-auto px-4 py-24">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3">
+            Why Choose Us?
           </h2>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {[
             {
-              icon: Shield,
-              title: "Memory System",
-              description: "Your agents remember important details across conversations. Build long-term relationships with AI that learns and grows."
+              icon: Database,
+              title: "Persistent Memory",
+              description: "Your agents remember important details across all conversations and learn your preferences."
             },
             {
-              icon: Globe,
-              title: "Modular Skills",
-              description: "Choose from 12+ pre-built abilities or combine them. Create the exact assistant you need, nothing more, nothing less."
+              icon: Users,
+              title: "Modular Design",
+              description: "Choose from 12+ pre-built skills. Create exactly the assistant you need, nothing more."
             },
             {
               icon: Rocket,
-              title: "Advanced Features",
-              description: "Automations, multi-agent collaboration, and file analysis coming soon. Start simple, scale infinitely."
+              title: "Growing Platform",
+              description: "Automations, team collaboration, and advanced features. Start simple, scale as needed."
             }
           ].map((feature, index) => (
             <Card
               key={index}
-              className="p-10 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border-border/50 hover:border-primary/30 transition-all duration-300 space-y-6"
+              className="p-8 bg-card border-border hover:border-primary/30 transition-all duration-200 space-y-4"
             >
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                <feature.icon className="w-8 h-8 text-primary" />
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <feature.icon className="w-5 h-5 text-primary" />
               </div>
-              <div className="space-y-3">
-                <h3 className="text-2xl font-bold">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -204,35 +201,34 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-32">
-        <Card className="max-w-4xl mx-auto p-16 bg-gradient-to-br from-primary/10 via-card/50 to-secondary/10 backdrop-blur-sm border-primary/20 text-center space-y-8">
-          <MessageSquare className="w-16 h-16 mx-auto text-primary animate-float" />
-          <h2 className="text-4xl lg:text-5xl font-bold">
-            Ready to Build Your AI Team?
+      <section className="container mx-auto px-4 py-24">
+        <Card className="max-w-2xl mx-auto p-10 md:p-12 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 text-center space-y-6">
+          <MessageSquare className="w-10 h-10 mx-auto text-primary" />
+          <h2 className="text-2xl md:text-3xl font-bold">
+            Ready to Build Your First Agent?
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Join thousands creating custom AI agents. No credit card required.
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Join others creating custom AI assistants. No credit card needed.
           </p>
-          <Link to="/auth" className="mt-10">
-            <Button size="lg" className="text-lg px-10 py-7 glow-cyan hover:scale-105 transition-all">
-              Get Started Free
-              <ArrowRight className="ml-2" />
-            </Button>
-          </Link>
+          <div className="pt-4">
+            <Link to="/auth">
+              <Button size="lg" className="text-base px-8 py-6 glow-primary hover:scale-105 transition-all">
+                Get Started Free
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
         </Card>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-12 mt-20">
-        <div className="container mx-auto px-4 text-center space-y-4">
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold">
-            <Brain className="text-primary" />
-            <span className="text-gradient">AI Agent Platform</span>
+      <footer className="border-t border-border py-10">
+        <div className="container mx-auto px-4 text-center space-y-3">
+          <div className="flex items-center justify-center gap-2 text-xl font-semibold">
+            <Layers className="text-primary w-5 h-5" />
+            <span>AgentBuilder</span>
           </div>
-          <p className="text-muted-foreground">
-            Building the future of AI assistance, together.
-          </p>
-          <p className="text-sm text-muted-foreground/60">© 2025 All rights reserved</p>
+          <p className="text-sm text-muted-foreground">© 2025 All rights reserved</p>
         </div>
       </footer>
     </div>
