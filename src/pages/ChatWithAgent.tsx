@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, Zap, Paperclip } from "lucide-react";
+import { ArrowLeft, Send, Zap, Paperclip, MoreVertical, Pencil, Trash2, History } from "lucide-react";
 import type { Agent, Message, AgentAutomation } from "@/integrations/supabase/database.types";
 import { AutomationCard } from "@/components/AutomationCard";
 import { CreateAutomationDialog } from "@/components/CreateAutomationDialog";
@@ -16,7 +16,28 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 const ChatWithAgent = () => {
   const { agentId } = useParams();
@@ -27,6 +48,11 @@ const ChatWithAgent = () => {
   const [showAutomations, setShowAutomations] = useState(false);
   const [automations, setAutomations] = useState<AgentAutomation[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
+  const [editForm, setEditForm] = useState({ name: "", description: "", instructions: "" });
+  const [isOwner, setIsOwner] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -76,6 +102,12 @@ const ChatWithAgent = () => {
       }
 
       setAgent(agentData);
+      setIsOwner(agentData.user_id === session.user.id);
+      setEditForm({
+        name: agentData.name || "",
+        description: agentData.description || "",
+        instructions: agentData.instructions || "",
+      });
 
       // Get messages for this agent
       const { data: msgData, error: msgError } = await supabase
@@ -217,6 +249,81 @@ const ChatWithAgent = () => {
     }
   };
 
+  const handleEditAgent = async () => {
+    if (!agentId || !editForm.name.trim()) return;
+
+    const { error } = await supabase
+      .from('agents')
+      .update({
+        name: editForm.name.trim(),
+        description: editForm.description.trim(),
+        instructions: editForm.instructions.trim(),
+      })
+      .eq('id', agentId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update agent",
+        variant: "destructive",
+      });
+    } else {
+      setAgent(prev => prev ? { ...prev, ...editForm } : null);
+      setShowEditDialog(false);
+      toast({
+        title: "Success",
+        description: "Agent updated",
+      });
+    }
+  };
+
+  const handleDeleteAgent = async () => {
+    if (!agentId) return;
+
+    const { error } = await supabase
+      .from('agents')
+      .delete()
+      .eq('id', agentId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete agent",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Agent deleted",
+      });
+      navigate("/agents");
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (!agentId) return;
+
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('agent_id', agentId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear history",
+        variant: "destructive",
+      });
+    } else {
+      setMessages([]);
+      setShowClearHistoryDialog(false);
+      toast({
+        title: "Success",
+        description: "Chat history cleared",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="border-b border-border/50 bg-card/30 backdrop-blur-sm">
@@ -236,13 +343,45 @@ const ChatWithAgent = () => {
                 </div>
               )}
             </div>
-            <Button
-              variant={showAutomations ? "default" : "outline"}
-              onClick={() => setShowAutomations(!showAutomations)}
-            >
-              <Zap className="mr-2 h-4 w-4" />
-              Automations
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={showAutomations ? "default" : "outline"}
+                onClick={() => setShowAutomations(!showAutomations)}
+              >
+                <Zap className="mr-2 h-4 w-4" />
+                Automations
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isOwner && (
+                    <>
+                      <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit Agent
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setShowDeleteDialog(true)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Agent
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem onClick={() => setShowClearHistoryDialog(true)}>
+                    <History className="mr-2 h-4 w-4" />
+                    Clear History
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
@@ -353,6 +492,86 @@ const ChatWithAgent = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Agent Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Agent</DialogTitle>
+            <DialogDescription>Update your agent's details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={editForm.name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Agent name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={editForm.description}
+                onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Brief description"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="instructions">Instructions</Label>
+              <Textarea
+                id="instructions"
+                value={editForm.instructions}
+                onChange={(e) => setEditForm(prev => ({ ...prev, instructions: e.target.value }))}
+                placeholder="How should the agent behave?"
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+            <Button onClick={handleEditAgent}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Agent Alert */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Agent</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{agent?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAgent} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear History Alert */}
+      <AlertDialog open={showClearHistoryDialog} onOpenChange={setShowClearHistoryDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear Chat History</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to clear all messages? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearHistory}>
+              Clear History
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
