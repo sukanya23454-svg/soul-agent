@@ -415,16 +415,8 @@ const ChatWithAgent = () => {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto relative">
-        {/* Sticky back button */}
-        <Link to="/agents" className="sticky top-4 left-4 z-10 inline-block ml-4 mt-4">
-          <Button variant="outline" size="sm" className="bg-card/80 backdrop-blur-sm shadow-lg">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        </Link>
-        
-        <div className="container mx-auto px-4 py-4 max-w-4xl">
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="space-y-4">
             {messages.map((msg, idx) => (
               <Card
