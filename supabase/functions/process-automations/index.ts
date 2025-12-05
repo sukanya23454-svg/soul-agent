@@ -12,6 +12,21 @@ serve(async (req) => {
   }
 
   try {
+    // Security: Validate cron secret to prevent unauthorized access
+    const cronSecret = Deno.env.get('AUTOMATION_CRON_SECRET');
+    const providedSecret = req.headers.get('X-Automation-Secret');
+    
+    if (!cronSecret || providedSecret !== cronSecret) {
+      console.error('Unauthorized: Invalid or missing automation secret');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const groqApiKey = Deno.env.get('GROQ_API_KEY');
